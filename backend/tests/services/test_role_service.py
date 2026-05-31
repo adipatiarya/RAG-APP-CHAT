@@ -195,3 +195,21 @@ async def test_delete_role(async_db: AsyncSession, role_id) -> None:
    
    role = await service.role_crud.get_by_name_or_id(role_id)
    assert role is None #seharusnya kosong karena sudah di hapus
+
+
+@pytest.mark.asyncio
+async def test_transform_permis(async_db: AsyncSession) -> None:
+   service = get_role_service(async_db)
+   all_perms = await service.permission_crud.list_all()
+   temp = []
+
+   for p in all_perms:
+       x = p.name.split("_")
+       temp.append(x[2])     
+
+   modules = list(set(temp))
+   datax= {
+        resource: {f"can_{action}_{resource}": False for action in ['create','view','update','delete']}
+        for resource in modules
+    }
+   print(datax)
