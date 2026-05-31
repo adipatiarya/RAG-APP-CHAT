@@ -52,6 +52,7 @@ async def test_create_roles(client: AsyncClient, normal_user_token_headers: dict
     assert "permission" in resp
     assert "created_at" in resp
     assert "updated_at" in resp
+    assert resp["updated_at"] is None
     assert json.dumps(resp["permission"], sort_keys=True) == json.dumps(payload["permission"], sort_keys=True)
 
 @pytest.mark.asyncio
@@ -499,9 +500,10 @@ async def test_update_role_with_authorize_permission(client: AsyncClient, async_
     tokens = r.json()
     a_token = tokens["access_token"]
     headers = {"Authorization":f"Bearer {a_token}"}
+    role_name = random_lower_string()
 
     payload = {
-        "name": random_lower_string(),
+        "name": role_name,
         "description": "string",
         "permission": {
             "user": {
@@ -520,7 +522,19 @@ async def test_update_role_with_authorize_permission(client: AsyncClient, async_
     }
 
     r = await client.put(f"{settings.API_V1_STR}/roles/{role.id}", headers=headers, json=payload)
+    
     assert 200 == r.status_code
+    resp = r.json()
+
+    assert resp
+    assert "id" in resp
+    assert "name" in resp
+    assert role_name == resp["name"]
+    assert "description" in resp
+    assert "permission" in resp
+    assert "created_at" in resp
+    assert "updated_at" in resp
+    assert "updated_at" is not None
 
 
 @pytest.mark.asyncio

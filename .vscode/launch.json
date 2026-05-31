@@ -67,6 +67,14 @@
             "args": ["-s", "-v", "tests/services"],
             "cwd": "${workspaceFolder}/backend"
         },
+        {
+            "name": "Alembic Migrasi",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "alembic",
+            "args": ["revision", "-m", "init table", "--autogenerate"],
+            "cwd": "${workspaceFolder}/backend"
+        },
 
     ]
 }
