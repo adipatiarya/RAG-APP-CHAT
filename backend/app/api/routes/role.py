@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from pydantic import BaseModel
 from app.api.deps import CurrentUser, SessionDep, get_role_service, require_permissions
 
 from app.models.role import RoleCreate, RoleDelete, RolePublic, RoleUpdate
@@ -136,7 +138,26 @@ async def update_role(sess: SessionDep, data: RolePermissionDto,  role_id: uuid.
         deleted_at=resp.deleted_at,
         permission= apply_permissions(all_perms(), [perm.name for perm in resp.permissions] )
     )
-    return role 
+    return role
+
+@router.put("/{role_id}/restore",
+            summary="Restore role",
+            description="Restore data role berdasarkan ID", 
+            status_code=status.HTTP_204_NO_CONTENT,  
+            dependencies=[Depends(require_permissions(["can_update_role"]))])
+
+async def update_role_restore(sess: SessionDep,  role_id: uuid.UUID = Path(..., description="UUID role")):
+    service = get_role_service(sess)
+    role = await service.role_crud.get_by_name_or_id(role_id)
+    if not role:
+         raise HTTPException(status_code=404, detail="Role not found")
+    
+    role_in = RoleDelete(
+        deleted_at=None
+    )
+    if role.deleted_at is not None:
+        await service.update_role(role, role_in)
+    
         
 from enum import Enum
 
@@ -167,4 +188,4 @@ async def delete_role(
         # soft delete
         role_in = RoleDelete(deleted_at=get_datetime_utc())
         await service.update_role(role, role_in)
-    
+
