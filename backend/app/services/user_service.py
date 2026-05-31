@@ -109,6 +109,7 @@ class UserService:
             full_name=user.full_name,
             is_superuser=user.is_superuser,
             is_active=user.is_active,
-            role=user.roles[0].name,
+            role=user.roles[0].name if user.roles else None,
+            role_status=user.roles[0].is_active if user.roles else False,
             permissions=list(set([p.name for r in user.roles for p in r.permissions]))
         )

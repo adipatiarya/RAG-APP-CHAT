@@ -153,7 +153,8 @@ async def update_role_restore(sess: SessionDep,  role_id: uuid.UUID = Path(..., 
          raise HTTPException(status_code=404, detail="Role not found")
     
     role_in = RoleDelete(
-        deleted_at=None
+        deleted_at=None,
+        is_active=True
     )
     if role.deleted_at is not None:
         await service.update_role(role, role_in)
@@ -186,6 +187,6 @@ async def delete_role(
         
     else:
         # soft delete
-        role_in = RoleDelete(deleted_at=get_datetime_utc())
+        role_in = RoleDelete(deleted_at=get_datetime_utc(), is_active=False)
         await service.update_role(role, role_in)
 

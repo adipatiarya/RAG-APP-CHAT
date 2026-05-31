@@ -18,6 +18,7 @@ class Role(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(unique=True, index=True, max_length=255)
     description: str | None = Field(default=None, max_length=255)
+    is_active: bool = True
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -44,6 +45,7 @@ class RoleCreate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=128)
     description: Optional[str] = None
     permission_strs: Optional[list[str]] = Field(default_factory=list)
+    is_active: bool = True
 
 class RoleUpdate(RoleCreate):
     updated_at: Optional[datetime]  = get_datetime_utc()
@@ -60,5 +62,6 @@ class  RolePublic(BaseModel):
     permissions: list[str] = []
     total_user: int = 0
     total_permission: int = 0
+    is_active: bool
 
     

@@ -50,3 +50,4 @@ class  UserPublic(BaseModel):
     full_name: str | None = None
     role: str | None = None
     permissions: list[str] = []
+    role_status: bool = True

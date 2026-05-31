@@ -13,7 +13,7 @@ from jwt.exceptions import InvalidTokenError
 
 from app.core.db import engine
 from app.core.config import settings
-from app.models.user import User
+from app.models.user import User, UserPublic
 from app.generic import TokenPayload, UserPermission
 
 from app.repositories.cruds.role_crud import RoleCrud
@@ -67,6 +67,7 @@ async def get_current_user(sess: SessionDep, token: TokenDep):
     service = get_user_service(sess)
 
     user = await service.user_crud.roles(token_data.sub)
+    
     if not user:
         raise HTTPException(status_code=404, detail='User not eksis')
     if not user.is_active:
@@ -87,11 +88,12 @@ def get_current_user_superadmin(current_user: CurrentUser):
 def require_permissions(required: List[str]):
     def dependency(current_user:CurrentUser):
         # pengecualian: kalau superuser, langsung lolos
+    
         if current_user.is_superuser:
             return current_user
-        
+      
         user_permissions = current_user.permissions
-        if not all(perm in user_permissions for perm in required):
+        if not all(perm in user_permissions for perm in required) or current_user.role_status is not True:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Permission denied"

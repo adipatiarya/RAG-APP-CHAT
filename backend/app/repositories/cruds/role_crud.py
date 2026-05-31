@@ -34,7 +34,8 @@ class RoleCrud(Crud[Role]):
             users = [p.email for p in role.users],
             permissions=[p.name for p in role.permissions],
             total_user=len(role.users),
-            total_permission=len(role.permissions)
+            total_permission=len(role.permissions),
+            is_active=role.is_active
         )
     
     async def filtered(

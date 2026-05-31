@@ -1,8 +1,8 @@
-"""create user role permission table
+"""init table
 
-Revision ID: beddeeb40e05
+Revision ID: aa9bf6cd4850
 Revises: 
-Create Date: 2026-05-31 10:20:35.489362
+Create Date: 2026-05-31 14:14:15.825687
 
 """
 from typing import Sequence, Union
@@ -14,7 +14,7 @@ from pgvector.sqlalchemy import Vector
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'beddeeb40e05'
+revision: str = 'aa9bf6cd4850'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -32,9 +32,10 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_permission_name'), 'permission', ['name'], unique=True)
     op.create_table('role',
+    sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
-    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),

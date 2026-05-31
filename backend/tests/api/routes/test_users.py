@@ -214,7 +214,7 @@ async def test_filter(client: AsyncClient , superuser_token_headers: dict[str, s
 
     for user in resp['data']:
         # assert semua key ada
-        required_keys = ["id", "email", "full_name","is_superuser","is_active","role", "permissions"]
+        required_keys = ["id", "email", "full_name","is_superuser","is_active","role", "permissions", "role_status"]
         assert all(key in user for key in required_keys), "Missing required keys"
         # cek tipe value
         assert isinstance(user["id"], str), "id must be uid"
@@ -222,6 +222,7 @@ async def test_filter(client: AsyncClient , superuser_token_headers: dict[str, s
         assert isinstance(user["is_superuser"], bool), "is_superuser must be bool"
         assert isinstance(user["is_active"], bool), "is_active must be bool"
         assert isinstance(user["role"], str), "role must be string"
+        assert isinstance(user["role_status"], bool), "role must be bool"
         assert isinstance(user["permissions"], list), "permissions must be list"
         assert len(user["permissions"]) == len(set(user["permissions"])), "permissions must be unique"
     
@@ -412,3 +413,34 @@ async def test_update_user_with_authorize_permission(client: AsyncClient, async_
     x = await client.post(f"{settings.API_V1_STR}/auth/access-token", data=login_data)
 
     assert 401 == x.status_code
+
+
+@pytest.mark.asyncio
+async def test_read_user_with_uthorize_permission_if_role_inactive(client: AsyncClient, async_db):
+    #buat role
+    permission = ['can_view_user']
+    
+    role_in = RoleCreate(name='manual', description='wkwkw', permission_strs=permission, is_active=False)
+    service = get_role_service(async_db)
+    role = await service.create_role(role_in)
+    assert role.name == 'manual'
+
+    #buat user
+    user_in = UserCreate(email='jika@gmail.com', password='ayamsayur', role='manual')
+    service = get_user_service(async_db)
+    user = await service.create_user(user_in)
+    assert user.email == 'jika@gmail.com'
+
+    login_data = {
+        "username":'jika@gmail.com',
+        "password": 'ayamsayur'
+    }
+   
+    r = await client.post(f"{settings.API_V1_STR}/auth/access-token", data=login_data)
+    tokens = r.json()
+    a_token = tokens["access_token"]
+    headers = {"Authorization":f"Bearer {a_token}"}
+
+    #create user
+    r = await client.get(f"{settings.API_V1_STR}/users", headers=headers)
+    assert 403 == r.status_code

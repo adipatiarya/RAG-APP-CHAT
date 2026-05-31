@@ -22,7 +22,7 @@ class UserCrud(Crud[User]):
         )
         return result.scalars().first()
     
-    async def roles(self, user_id: uuid.UUID) -> User | None:
+    async def roles(self, user_id: uuid.UUID) -> User:
         result = await self.session.execute(select(User).options(selectinload(User.roles).selectinload(Role.permissions)).where(User.id == user_id))
         user = result.scalar_one()
         return user
@@ -36,7 +36,8 @@ class UserCrud(Crud[User]):
             is_superuser=user.is_superuser,
             is_active=user.is_active,
             role=user.roles[0].name if user.roles else None,
-            permissions=list(set([p.name for r in user.roles for p in r.permissions]))
+            permissions=list(set([p.name for r in user.roles for p in r.permissions])),
+            role_status = user.roles[0].is_active if user.roles else False,
         )
     async def filtered(
         self,
