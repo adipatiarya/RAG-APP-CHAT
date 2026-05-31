@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import DateTime
 
-from sqlmodel import  Field, Relationship, SQLModel as Base
+from sqlmodel import  Field, Relationship, SQLModel
 
 from app.utils import get_datetime_utc
 from app.models.user_role import UserRole
@@ -14,17 +14,19 @@ if TYPE_CHECKING:
     from .user import User
     from .permission import Permission
 
-class RoleBase(Base):
+class Role(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(unique=True, index=True, max_length=255)
     description: str | None = Field(default=None, max_length=255)
-
-class Role(RoleBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     updated_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    deleted_at: datetime | None = Field(
         default=None,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
@@ -39,15 +41,15 @@ class Role(RoleBase, table=True):
     
 # API schemas (BaseModel)
 class RoleCreate(BaseModel):
-    name: str
-    description: str | None = None
-    permission_strs: list[str] = Field(default_factory=list)
-
-class RoleUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=128)
     description: Optional[str] = None
-    permission_strs: list[str] = Field(default_factory=list)
+    permission_strs: Optional[list[str]] = Field(default_factory=list)
+
+class RoleUpdate(RoleCreate):
     updated_at: Optional[datetime]  = get_datetime_utc()
+
+class RoleDelete(RoleUpdate):
+    deleted_at: Optional[datetime]  = get_datetime_utc()
 
 class  RolePublic(BaseModel):
     id: uuid.UUID

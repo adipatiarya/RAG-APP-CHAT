@@ -17,6 +17,7 @@ class RolePermissionDetail(RolePermissionDto):
     id: uuid.UUID
     created_at: datetime
     updated_at: Optional[Any] = None
+    deleted_at: Optional[Any] = None
 
 class RolePermissionPublic(BaseModel):
     name: str

@@ -4,12 +4,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from app.api.deps import CurrentUser, SessionDep, get_role_service, require_permissions
 
-from app.models.role import RoleCreate, RolePublic, RoleUpdate
+from app.models.role import RoleCreate, RoleDelete, RolePublic, RoleUpdate
 
 from app.api.dtos.generic import Paginated
 
 from app.api.dtos.role_dto import RolePermissionDto, RolePermissionDetail
-from app.utils import all_perms, apply_permissions, extract_true_permissions
+from app.utils import all_perms, apply_permissions, extract_true_permissions, get_datetime_utc
 
 router = APIRouter(tags=["Role Permissions"], prefix="/roles")
 
@@ -103,6 +103,7 @@ async def  get_role(sess: SessionDep, role_id: uuid.UUID  = Path(..., descriptio
         name=resp.name,
         description=resp.description,
         updated_at=resp.updated_at,
+        deleted_at=resp.deleted_at,
         permission = apply_permissions(all_perms(), [perm.name for perm in resp.permissions] )
     )
     return role 
@@ -120,7 +121,8 @@ async def update_role(sess: SessionDep, data: RolePermissionDto,  role_id: uuid.
     
     role_in = RoleUpdate(
         name=data.name,
-        permission_strs=extract_true_permissions(data.permission)
+        permission_strs=extract_true_permissions(data.permission),
+        updated_at=get_datetime_utc()
     )
 
     resp = await service.update_role(role, role_in)
@@ -131,19 +133,38 @@ async def update_role(sess: SessionDep, data: RolePermissionDto,  role_id: uuid.
         name=resp.name,
         description=resp.description,
         updated_at=resp.updated_at,
+        deleted_at=resp.deleted_at,
         permission= apply_permissions(all_perms(), [perm.name for perm in resp.permissions] )
     )
     return role 
         
+from enum import Enum
+
+class HardDeleteOption(str, Enum):
+    YES = "yes"
+    NO = "no"
 
 @router.delete("/{role_id}",summary="Delete role",
         description="Delete data role berdasarkan ID",
         status_code=status.HTTP_204_NO_CONTENT, 
         dependencies=[Depends(require_permissions(["can_delete_role"]))]
     )
-async def delete_role(sess: SessionDep,  role_id: uuid.UUID = Path(..., description="UUID role")):
+async def delete_role(
+    sess: SessionDep,
+    role_id: uuid.UUID = Path(..., description="UUID role"),
+    hard: HardDeleteOption = Query(HardDeleteOption.YES, description="Hard delete? yes/no")  # default no
+):
     service = get_role_service(sess)
     role = await service.role_crud.get_by_name_or_id(role_id)
     if not role:
-         raise HTTPException(status_code=404, detail="Role not found")
-    await service.role_crud.delete(role)
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    if hard == HardDeleteOption.YES:
+        # hard delete
+        await service.role_crud.delete(role)
+        
+    else:
+        # soft delete
+        role_in = RoleDelete(deleted_at=get_datetime_utc())
+        await service.update_role(role, role_in)
+    
