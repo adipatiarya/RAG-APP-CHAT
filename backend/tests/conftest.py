@@ -17,6 +17,7 @@ from app.models.user import User, UserCreate
 from app.models.role import Role, RoleCreate
 from app.models.user_role import UserRole
 from app.models.permission import Permission, RolePermission
+from app.models.document import Document
 
 from app.api.deps import get_user_service, get_db, get_role_service
 from app.main import app
@@ -56,7 +57,7 @@ async def async_db(async_db_engine):
     async with async_session() as session:
         await session.commit()
         yield session
-        for model in [UserRole, User, Role, Permission, RolePermission]:
+        for model in [UserRole, User, Role, Permission, RolePermission, Document]:
             await session.execute(delete(model))
         await session.commit()
 

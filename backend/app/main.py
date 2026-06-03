@@ -6,11 +6,14 @@ from app.exception import duplicate_entry_handler, global_exception_handler
 from app.api.deps import AsyncSessionLocal, get_role_service
 
 from app.seeders.role_permission import initial_permissions, initial_role, initial_user
+from app.seeders.document import initial_answers
+
 async def lifespan(_):
     # Startup logic
     print("🚀 FastAPI server is starting...")
     # misalnya: buka koneksi DB, inisialisasi cache, dll
     async with AsyncSessionLocal() as session:
+       # await initial_answers(session)
         await initial_permissions(session)
         role = await initial_role(session)
         await initial_user(session, role.name)

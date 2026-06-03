@@ -3,3 +3,4 @@ from .role import Role
 from .user import User
 from .user_role import UserRole
 from .role_permision import RolePermission
+from .document import Document
