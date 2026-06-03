@@ -3,10 +3,9 @@ from app.api.main import api_router
 from app.core.config import settings
 from app.core.exception import DuplicateEntryError
 from app.exception import duplicate_entry_handler, global_exception_handler
-from app.api.deps import AsyncSessionLocal, get_role_service
+from app.api.deps import AsyncSessionLocal
 
 from app.seeders.role_permission import initial_permissions, initial_role, initial_user
-from app.seeders.document import initial_answers
 
 async def lifespan(_):
     # Startup logic

@@ -22,9 +22,6 @@ from app.repositories.cruds.permission_crud import PermissionCrud
 
 from app.services.user_service import UserService
 from app.services.role_service import RoleService
-from app.services.embeded_service import EmbededService
-from app.repositories.embeded.embed_crud import EmbedCrud
-
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
@@ -55,10 +52,6 @@ def get_role_service(session: AsyncSession) -> RoleService:
     permission_repo = PermissionCrud(session)
     return RoleService(role_repo, permission_repo)
 
-
-def get_embeded_service(session: AsyncSession) -> EmbededService:
-    embed_repo = EmbedCrud(session)
-    return EmbededService(embed_repo)
 
 async def get_current_user(sess: SessionDep, token: TokenDep):
    
