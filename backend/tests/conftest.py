@@ -23,7 +23,7 @@ from app.main import app
 from app.utils import seed_permission_all
 
 async_engine = create_async_engine(
-    url='postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db_test',
+    url='postgresql+asyncpg://postgres:postgres@localhost:5432/fastapi_db',
     echo=False,
     poolclass=NullPool,
 )
