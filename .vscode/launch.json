@@ -49,6 +49,14 @@
             "args": ["-s", "-v", "tests/api/routes/test_role_soft_delete.py"],
             "cwd": "${workspaceFolder}/backend"
         },
+        {
+            "name": "Test Api Faq",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["-s", "-v", "tests/api/routes/test_faq.py"],
+            "cwd": "${workspaceFolder}/backend"
+        },
 
         {
             "name": "Test Service Roles",
@@ -58,6 +66,7 @@
             "args": ["-s", "-v", "tests/services/test_role_service.py"],
             "cwd": "${workspaceFolder}/backend"
         },
+        
          {
             "name": "Test Service User",
             "type": "debugpy",

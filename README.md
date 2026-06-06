@@ -1,3 +1,5 @@
+psql -h localhost -U postgres -d fastapi_db
+
 CREATE EXTENSION IF NOT EXISTS vector;
 alembic upgrade head
 
