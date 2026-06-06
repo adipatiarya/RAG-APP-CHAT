@@ -24,7 +24,7 @@ class FaqBase(SQLModel):
     )
 class Faq(FaqBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    embedding: list[float] = Field(sa_column=Column(Vector(768)))
+    embedding: list[float] = Field(sa_column=Column(Vector(384)))
 
 class FaqCreate(FaqBase):
     project_name: str | None = Field(default='default')

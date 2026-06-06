@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path, Query, status
 from app.api.deps import  CurrentUser, SessionDep
 from app.models.faq import FaqCreate, FaqPublic
-
+from app.repositories.embeded.embed import get_embedding
 
 router = APIRouter(prefix="/faqs", tags=["Faq"])
 
@@ -11,10 +11,11 @@ router = APIRouter(prefix="/faqs", tags=["Faq"])
 
 )
 async def create_faq(*, session: SessionDep, body: FaqCreate, current_user: CurrentUser) -> None:
-  faq_in = FaqCreate(
-    content='yes'
-  )
-  return FaqPublic(
-    content=faq_in.content,
-    project_name=faq_in.project_name
+    
+    embed = get_embedding(body.content)
+    print(embed)
+    
+    return FaqPublic(
+        content=body.content,
+        project_name='tex'
   )

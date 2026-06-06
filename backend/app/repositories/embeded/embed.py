@@ -5,10 +5,10 @@ from huggingface_hub import snapshot_download
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(current_dir, "all-MiniLM-L6-v2")
+model = SentenceTransformer(model_path)
 
 def get_embedding(text: str) -> list[float]:
-    model = SentenceTransformer(model_path)
-    embedding = model.encode(text).tolist()
+    embedding = model.encode(text, batch_size=32).tolist()
     return embedding
 
 def download_model() -> None:
