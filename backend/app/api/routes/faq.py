@@ -1,11 +1,19 @@
 import asyncio
 import csv
+import json
 
-from fastapi import APIRouter, File, Path, Query, UploadFile, status
+from fastapi import APIRouter, File, Path, Query, UploadFile, status, WebSocket, WebSocketDisconnect, Depends
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.api.deps import  CurrentUser, SessionDep
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.deps import CurrentUser, SessionDep, get_db
 from app.models.faq import Faq, FaqCreate, FaqPublic
 from app.repositories.embeded.embed import get_embedding
+from app.services.faq_service import FaqService
+from openai import OpenAI
+from app.core.config import settings
+
+# Initialize OpenAI client
+llm_client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 router = APIRouter(prefix="/faqs", tags=["Faq"])
 
@@ -57,4 +65,70 @@ async def create_faq(*, session: SessionDep, body: FaqCreate, current_user: Curr
     return FaqPublic(
         content=body.content,
         project_name='tex'
-  )
+    )
+
+
+@router.websocket("/chat")
+async def websocket_chat(websocket: WebSocket, session: SessionDep):
+    await websocket.accept()
+    faq_service = FaqService(session)
+    
+    try:
+        while True:
+            data = await websocket.receive_text()
+            
+            # Generate embedding dari input user
+            embedding = get_embedding(data)
+            
+            # Search FAQ yang mirip (RAG)
+            relevant_faqs = await faq_service.search(embedding, top_k=3)
+            
+            # Format FAQs untuk prompt
+            faqs_context = "\n\n".join([
+                f"Q: {faq[1]}\nScore: {faq[2]:.2%}" 
+                for faq in relevant_faqs
+            ]) if relevant_faqs else "Tidak ada FAQ yang relevan"
+            
+            # Buat system prompt dengan tone santai
+            system_prompt = f"""Halo! 👋 Aku adalah assistant untuk toko baju kamu. 
+Aku siap membantu menjawab semua pertanyaanmu tentang toko, produk, jam operasional, pembayaran, dan lainnya.
+
+Berdasarkan FAQ di bawah ini, coba jawab pertanyaan dengan santai, ramah, dan jelas ya. Kalau ada yang kurang jelas, tanyakan lagi!
+
+FAQ:
+{faqs_context}"""
+            # Call OpenAI API
+            try:
+                llm_response = llm_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": data}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+                answer = llm_response.choices[0].message.content
+                
+            except Exception as e:
+                answer = f"Error calling LLM: {str(e)}"
+            
+            # # Format response
+            # response = {
+            #     "user_query": data,
+            #     "answer": answer,
+            #     "relevant_faqs": [
+            #         {
+            #             "id": str(faq[0]),  # Convert UUID to string
+            #             "content": faq[1],
+            #             "similarity_score": round(faq[2], 2)
+            #         }
+            #         for faq in relevant_faqs
+            #     ] if relevant_faqs else [],
+            #     "faq_count": len(relevant_faqs) if relevant_faqs else 0
+            # }
+            
+            await websocket.send_text(answer)
+            
+    except WebSocketDisconnect:
+        pass

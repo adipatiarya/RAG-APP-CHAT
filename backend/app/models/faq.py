@@ -27,7 +27,7 @@ class Faq(FaqBase, table=True):
     embedding: list[float] = Field(sa_column=Column(Vector(384)))
 
 class FaqCreate(FaqBase):
-    project_name: str | None = Field(default='default')
+    pass
 
 class FaqPublic(FaqCreate):
     pass

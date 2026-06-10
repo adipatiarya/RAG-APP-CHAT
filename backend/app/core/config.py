@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     ENV: str = 'prod'
 
     DEFAULT_ROLE_USER: str
+    OPENAI_API_KEY: str
 
 
     #menghasilkan dot bukan ()
